@@ -35,7 +35,7 @@ services:
 
   # 3. Authentication Microservice
   auth-service:
-    image: ${DOCKERHUB_USERNAME}/micro-chat-auth-service:latest
+    image: prince093kumar/micro-chat-auth-service:latest
     container_name: auth_service
     environment:
       - PORT=5001
@@ -50,7 +50,7 @@ services:
 
   # 4. Real-Time Chat Microservice
   chat-service:
-    image: ${DOCKERHUB_USERNAME}/micro-chat-chat-service:latest
+    image: prince093kumar/micro-chat-chat-service:latest
     container_name: chat_service
     environment:
       - PORT=5002
@@ -69,7 +69,7 @@ services:
 
   # 5. Background Notification Microservice
   notification-service:
-    image: ${DOCKERHUB_USERNAME}/micro-chat-notification-service:latest
+    image: prince093kumar/micro-chat-notification-service:latest
     container_name: notification_service
     environment:
       - PORT=5003
@@ -90,7 +90,7 @@ services:
 
   # 6. Central API Gateway
   gateway:
-    image: ${DOCKERHUB_USERNAME}/micro-chat-gateway:latest
+    image: prince093kumar/micro-chat-gateway:latest
     container_name: api_gateway
     ports:
       - "5000:5000"
@@ -110,7 +110,7 @@ services:
 
   # 7. React Frontend Web Client
   client:
-    image: ${DOCKERHUB_USERNAME}/micro-chat-client:latest
+    image: prince093kumar/micro-chat-client:latest
     container_name: chat_client
     ports:
       - "3000:80"
