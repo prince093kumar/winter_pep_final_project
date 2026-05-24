@@ -19,7 +19,6 @@ const server = http.createServer(app);
 
 // Middlewares
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 
 // Routes
@@ -46,12 +45,7 @@ const REDIS_PORT = process.env.REDIS_PORT || 6379;
 
 const setupRealTime = async () => {
   // Create Socket.IO server with loose CORS since Gateway will handle external access
-  io = new Server(server, {
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST']
-    }
-  });
+  io = new Server(server);
 
   try {
     console.log(`尝试连接 Redis @ redis://${REDIS_HOST}:${REDIS_PORT}`);

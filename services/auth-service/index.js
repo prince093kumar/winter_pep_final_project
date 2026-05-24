@@ -14,7 +14,6 @@ if (process.env.NODE_ENV !== 'test' && !process.env.JEST_WORKER_ID) {
 
 // Middlewares
 app.use(helmet());
-app.use(cors());
 app.use(express.json());
 
 // Routes
