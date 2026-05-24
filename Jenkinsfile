@@ -33,45 +33,44 @@ pipeline {
         // }
         
         stage(' Build & Push Docker Images') {
-            environment {
-                DOCKER_CREDS = credentials('dockerhub-credentials')
-            }
             steps {
                 echo 'Building and publishing container images to Docker Hub...'
-                sh 'echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin'
-                
-                // Build and tag each service
-                sh "docker build -t ${DOCKER_CREDS_USR}/micro-chat-auth-service:latest ./services/auth-service"
-                sh "docker build -t ${DOCKER_CREDS_USR}/micro-chat-chat-service:latest ./services/chat-service"
-                sh "docker build -t ${DOCKER_CREDS_USR}/micro-chat-notification-service:latest ./services/notification-service"
-                sh "docker build -t ${DOCKER_CREDS_USR}/micro-chat-gateway:latest ./gateway"
-                sh "docker build -t ${DOCKER_CREDS_USR}/micro-chat-client:latest ./client"
-                
-                // Push images
-                sh "docker push ${DOCKER_CREDS_USR}/micro-chat-auth-service:latest"
-                sh "docker push ${DOCKER_CREDS_USR}/micro-chat-chat-service:latest"
-                sh "docker push ${DOCKER_CREDS_USR}/micro-chat-notification-service:latest"
-                sh "docker push ${DOCKER_CREDS_USR}/micro-chat-gateway:latest"
-                sh "docker push ${DOCKER_CREDS_USR}/micro-chat-client:latest"
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKERHUB_TOKEN', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                    sh 'echo $DOCKERHUB_TOKEN | docker login -u $DOCKERHUB_USERNAME --password-stdin'
+                    
+                    // Build and tag each service
+                    sh "docker build -t ${DOCKERHUB_USERNAME}/micro-chat-auth-service:latest ./services/auth-service"
+                    sh "docker build -t ${DOCKERHUB_USERNAME}/micro-chat-chat-service:latest ./services/chat-service"
+                    sh "docker build -t ${DOCKERHUB_USERNAME}/micro-chat-notification-service:latest ./services/notification-service"
+                    sh "docker build -t ${DOCKERHUB_USERNAME}/micro-chat-gateway:latest ./gateway"
+                    sh "docker build -t ${DOCKERHUB_USERNAME}/micro-chat-client:latest ./client"
+                    
+                    // Push images
+                    sh "docker push ${DOCKERHUB_USERNAME}/micro-chat-auth-service:latest"
+                    sh "docker push ${DOCKERHUB_USERNAME}/micro-chat-chat-service:latest"
+                    sh "docker push ${DOCKERHUB_USERNAME}/micro-chat-notification-service:latest"
+                    sh "docker push ${DOCKERHUB_USERNAME}/micro-chat-gateway:latest"
+                    sh "docker push ${DOCKERHUB_USERNAME}/micro-chat-client:latest"
+                }
             }
         }
         
         stage(' Deploy to AWS EC2') {
-            environment {
-                DOCKER_CREDS = credentials('dockerhub-credentials')
-                SSH_KEY = credentials('aws-ec2-ssh-key')
-            }
             steps {
                 echo 'Deploying to AWS EC2...'
-                // Copy production docker-compose to EC2
-                sh "scp -o StrictHostKeyChecking=no -i $SSH_KEY docker-compose.prod.yml ${EC2_HOST}:~/docker-compose.prod.yml"
-                
-                // Execute remote deployment commands
-                sh """ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_HOST} << EOF
-                    export DOCKERHUB_USERNAME=${DOCKER_CREDS_USR}
+                withCredentials([
+                    sshUserPrivateKey(credentialsId: 'aws-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER'),
+                    usernamePassword(credentialsId: 'dockerhub', passwordVariable: 'DOCKERHUB_TOKEN', usernameVariable: 'DOCKERHUB_USERNAME')
+                ]) {
+                    // Copy production docker-compose to EC2
+                    sh "scp -o StrictHostKeyChecking=no -i $SSH_KEY docker-compose.prod.yml ${EC2_HOST}:~/docker-compose.prod.yml"
                     
-                    // Stop old containers
-                    docker-compose -f docker-compose.prod.yml down --remove-orphans || true
+                    // Execute remote deployment commands
+                    sh """ssh -o StrictHostKeyChecking=no -i $SSH_KEY ${EC2_HOST} << EOF
+                        export DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
+                        
+                        // Stop old containers
+                        docker-compose -f docker-compose.prod.yml down --remove-orphans || true
                         
                         // Pull latest images
                         docker-compose -f docker-compose.prod.yml pull
