@@ -4,9 +4,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Set default production gateway endpoint (client connects via gateway port 5000)
-ARG VITE_API_URL=http://localhost:5000
-ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
 # Stage 2: Serve using Nginx
