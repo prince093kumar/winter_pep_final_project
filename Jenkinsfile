@@ -10,7 +10,7 @@ pipeline {
         DOCKERHUB_CREDENTIALS_ID = 'dockerhub-credentials'
         
         // AWS EC2 Details
-        EC2_HOST = 'ec2-user@your-ec2-ip-or-domain'
+        EC2_HOST = 'ubuntu@32.192.25.114'
         SSH_CREDENTIALS_ID = 'aws-ec2-ssh-key' // Jenkins credentials ID for SSH private key
         
         COMPOSE_PROJECT_NAME = "chat_app"
