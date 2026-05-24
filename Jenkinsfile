@@ -79,7 +79,6 @@ pipeline {
                         // Start new containers
                         docker-compose -f docker-compose.prod.yml up -d
 EOF"""
-                }
             }
         }
         
