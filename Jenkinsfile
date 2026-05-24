@@ -80,22 +80,41 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Deploy to AWS EC2') {
             steps {
 
                 withCredentials([
-                    [$class: 'SSHUserPrivateKeyBinding',
-                    credentialsId: 'aws-key',
-                    keyFileVariable: 'SSH_KEY',
-                    usernameVariable: 'SSH_USER']
+
+                    sshUserPrivateKey(
+                        credentialsId: 'aws-key',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    ),
+
+                    usernamePassword(
+                        credentialsId: 'dockerhub',
+                        usernameVariable: 'DOCKERHUB_USERNAME',
+                        passwordVariable: 'DOCKERHUB_TOKEN'
+                    )
+
                 ]) {
 
+                    // Windows OpenSSH requires strict permissions on the private key.
+                    // We must convert forward slashes to backslashes and use icacls to remove open permissions.
                     bat '''
-                    scp -o StrictHostKeyChecking=no -i "%SSH_KEY%" docker-compose.prod.yml %EC2_HOST%:~/docker-compose.prod.yml
+                    set "KEY=%SSH_KEY:/=\\%"
+                    icacls "%KEY%" /inheritance:r /grant "%USERNAME%:F"
+                    scp -o StrictHostKeyChecking=no -i "%KEY%" docker-compose.prod.yml %EC2_HOST%:~/docker-compose.prod.yml
                     '''
 
                     bat '''
-                    ssh -o StrictHostKeyChecking=no -i "%SSH_KEY%" %EC2_HOST% "docker compose -f docker-compose.prod.yml down --remove-orphans || true && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d"
+                    set "KEY=%SSH_KEY:/=\\%"
+                    ssh -o StrictHostKeyChecking=no -i "%KEY%" %EC2_HOST% ^
+                    "export DOCKERHUB_USERNAME=%DOCKERHUB_USERNAME% && ^
+                    docker compose -f docker-compose.prod.yml down --remove-orphans || true && ^
+                    docker compose -f docker-compose.prod.yml pull && ^
+                    docker compose -f docker-compose.prod.yml up -d && ^
+                    docker image prune -af || true"
                     '''
                 }
             }
