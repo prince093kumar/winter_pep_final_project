@@ -68,14 +68,25 @@ pipeline {
 
         stage('Deploy to AWS EC2') {
             steps {
-                sshagent(credentials: ['aws-key']) {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'aws-key',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    )
+                ]) {
                     bat '''
-                    scp -o StrictHostKeyChecking=no docker-compose.prod.yml %EC2_HOST%:~/docker-compose.prod.yml
+                    set "KEY=%SSH_KEY:/=\\%"
+                    icacls "%KEY%" /inheritance:d
+                    icacls "%KEY%" /remove:g "BUILTIN\\Users"
+                    icacls "%KEY%" /remove:g "Authenticated Users"
+                    scp -o StrictHostKeyChecking=no -i "%KEY%" docker-compose.prod.yml %EC2_HOST%:~/docker-compose.prod.yml
                     '''
 
-                    bat """
-                    ssh -o StrictHostKeyChecking=no %EC2_HOST% "docker compose -f docker-compose.prod.yml down --remove-orphans || true && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d && docker image prune -af || true"
-                    """
+                    bat '''
+                    set "KEY=%SSH_KEY:/=\\%"
+                    ssh -o StrictHostKeyChecking=no -i "%KEY%" %EC2_HOST% "docker compose -f docker-compose.prod.yml down --remove-orphans || true && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d && docker image prune -af || true"
+                    '''
                 }
             }
         }
