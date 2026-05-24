@@ -74,6 +74,15 @@ const onProxyReq = (proxyReq, req, res) => {
   }
 };
 
+// Health Check Endpoint for Jenkins / AWS
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'healthy', service: 'API Gateway' });
+});
+
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Welcome to the Micro-Chat API Gateway' });
+});
+
 // 6. Router Proxies
 
 // Auth Service proxy

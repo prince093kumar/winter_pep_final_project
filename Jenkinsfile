@@ -96,7 +96,7 @@ pipeline {
                 script {
                     def host = env.EC2_HOST.split('@')[1]
                     bat """
-                    curl -f http://${host}:5000/
+                    curl -f http://${host}:5000/health
                     """
                 }
             }
