@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  # 1. MongoDB Database
+  mongodb:
+    image: mongo:6.0
+    container_name: chat_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - chat-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis Cache & PubSub
+  redis:
+    image: redis:7.0-alpine
+    container_name: chat_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - chat-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Authentication Microservice
+  auth-service:
+    image: ${DOCKERHUB_USERNAME}/micro-chat-auth-service:latest
+    container_name: auth_service
+    environment:
+      - PORT=5001
+      - MONGO_URI=mongodb://mongodb:27017/auth_db
+      - JWT_SECRET=supersecretkey
+      - JWT_EXPIRES_IN=24h
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - chat-network
+
+  # 4. Real-Time Chat Microservice
+  chat-service:
+    image: ${DOCKERHUB_USERNAME}/micro-chat-chat-service:latest
+    container_name: chat_service
+    environment:
+      - PORT=5002
+      - MONGO_URI=mongodb://mongodb:27017/chat_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=supersecretkey
+      - AUTH_SERVICE_URL=http://auth-service:5001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - chat-network
+
+  # 5. Background Notification Microservice
+  notification-service:
+    image: ${DOCKERHUB_USERNAME}/micro-chat-notification-service:latest
+    container_name: notification_service
+    environment:
+      - PORT=5003
+      - MONGO_URI=mongodb://mongodb:27017/notification_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - JWT_SECRET=supersecretkey
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - chat-network
+
+  # 6. Central API Gateway
+  gateway:
+    image: ${DOCKERHUB_USERNAME}/micro-chat-gateway:latest
+    container_name: api_gateway
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - AUTH_SERVICE_URL=http://auth-service:5001
+      - CHAT_SERVICE_URL=http://chat-service:5002
+      - NOTIFICATION_SERVICE_URL=http://notification-service:5003
+      - JWT_SECRET=supersecretkey
+      - CLIENT_URL=http://localhost:3000
+    depends_on:
+      - auth-service
+      - chat-service
+      - notification-service
+    networks:
+      - chat-network
+
+  # 7. React Frontend Web Client
+  client:
+    image: ${DOCKERHUB_USERNAME}/micro-chat-client:latest
+    container_name: chat_client
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+    networks:
+      - chat-network
+
+volumes:
+  mongo-data:
+    name: chat_mongo_data
+  redis-data:
+    name: chat_redis_data
+
+networks:
+  chat-network:
+    name: chat_network
+    driver: bridge
