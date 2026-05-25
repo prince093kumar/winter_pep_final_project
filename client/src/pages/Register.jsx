@@ -124,7 +124,7 @@ const Register = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="johndoe123"
+                placeholder="user123"
                 className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 hover:border-slate-600 focus:border-teal-500/80 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-4 focus:ring-teal-500/10 transition-all font-medium text-sm"
                 required
               />
@@ -140,7 +140,7 @@ const Register = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@domain.com"
+                placeholder="user@domain.com"
                 className="w-full pl-11 pr-4 py-3.5 bg-slate-900/50 border border-slate-700/50 hover:border-slate-600 focus:border-teal-500/80 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-4 focus:ring-teal-500/10 transition-all font-medium text-sm"
                 required
               />
