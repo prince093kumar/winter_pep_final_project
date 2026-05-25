@@ -26,8 +26,8 @@ spec:
     spec:
       containers:
         - name: auth-service
-          # Replace <YOUR_DOCKERHUB_USERNAME> with actual username before applying
-          image: <YOUR_DOCKERHUB_USERNAME>/micro-chat-auth-service:latest
+          # Replace prince093kumar with actual username before applying
+          image: prince093kumar/micro-chat-auth-service:latest
           ports:
             - containerPort: 5001
           env:
@@ -74,7 +74,7 @@ spec:
     spec:
       containers:
         - name: chat-service
-          image: <YOUR_DOCKERHUB_USERNAME>/micro-chat-chat-service:latest
+          image: prince093kumar/micro-chat-chat-service:latest
           ports:
             - containerPort: 5002
           env:
@@ -134,7 +134,7 @@ spec:
     spec:
       containers:
         - name: notification-service
-          image: <YOUR_DOCKERHUB_USERNAME>/micro-chat-notification-service:latest
+          image: prince093kumar/micro-chat-notification-service:latest
           ports:
             - containerPort: 5003
           env:

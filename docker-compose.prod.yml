@@ -100,7 +100,7 @@ services:
       - CHAT_SERVICE_URL=http://chat-service:5002
       - NOTIFICATION_SERVICE_URL=http://notification-service:5003
       - JWT_SECRET=supersecretkey
-      - CLIENT_URL=http://44.200.228.44:3000
+      - CLIENT_URL=http://44.206.53.131:3000
     depends_on:
       - auth-service
       - chat-service

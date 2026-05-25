@@ -19,7 +19,7 @@ data:
   REDIS_PORT: "6379"
 
   # External Client URL (Update this when deploying with actual domain)
-  CLIENT_URL: "http://localhost:3000"
+  CLIENT_URL: "http://44.206.53.131:3000"
 
 ---
 apiVersion: v1
